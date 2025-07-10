@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { WeatherData, ForecastData, LocationData } from '../types/weather';
+import type { WeatherData, ForecastData, LocationData, SearchLocation } from '../types/weather';
 
 const API_KEY = import.meta.env.VITE_WEATHER_API_KEY || '56857a6baef7430fbce51808250807';
 const BASE_URL = 'https://api.weatherapi.com/v1';
@@ -58,6 +58,57 @@ export const weatherService = {
     } catch (error) {
       console.error('根据坐标获取天气失败:', error);
       throw new Error('无法获取天气数据');
+    }
+  },
+
+  async searchLocations(query: string): Promise<SearchLocation[]> {
+    try {
+      const response = await weatherApi.get('/search.json', {
+        params: {
+          key: API_KEY,
+          q: query
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('搜索地点失败:', error);
+      throw new Error('无法搜索地点');
+    }
+  },
+
+  async getForecastByLocation(location: string, days: number = 3): Promise<ForecastData> {
+    try {
+      const response = await weatherApi.get('/forecast.json', {
+        params: {
+          key: API_KEY,
+          q: location,
+          days: days,
+          aqi: 'no',
+          alerts: 'no'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('获取天气预报失败:', error);
+      throw new Error('无法获取天气预报数据');
+    }
+  },
+
+  async getForecastByCoords(lat: number, lon: number, days: number = 3): Promise<ForecastData> {
+    try {
+      const response = await weatherApi.get('/forecast.json', {
+        params: {
+          key: API_KEY,
+          q: `${lat},${lon}`,
+          days: days,
+          aqi: 'no',
+          alerts: 'no'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('根据坐标获取天气预报失败:', error);
+      throw new Error('无法获取天气预报数据');
     }
   }
 };
