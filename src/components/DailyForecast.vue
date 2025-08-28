@@ -1,95 +1,114 @@
 <template>
-  <div class="daily-forecast">
-    <h3 class="forecast-title">未来天气预报</h3>
-    
-    <div v-if="loading" class="loading">
-      <div class="loading-spinner"></div>
-      <span>加载预报数据中...</span>
+  <div class="py-6 animate-fade-in">
+    <!-- 标题区域 -->
+    <div class="flex items-center gap-3 mb-6 animate-slide-down">
+      <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center text-white text-xl shadow-lg">
+        📅
+      </div>
+      <div>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">未来预报</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">7天天气变化趋势</p>
+      </div>
     </div>
-    
-    <div v-else-if="error" class="error">
+
+    <div v-if="loading" class="flex items-center justify-center gap-3 p-8">
+      <div class="loading-spinner"></div>
+      <span class="text-gray-600 dark:text-gray-300">加载预报数据中...</span>
+    </div>
+
+    <div v-else-if="error" class="error-message text-center p-4">
       {{ error }}
     </div>
-    
-    <div v-else-if="dailyData.length > 0" class="daily-container">
+
+    <div v-else-if="dailyData.length > 0" class="space-y-4">
       <div
         v-for="(day, index) in dailyData"
         :key="day.date_epoch"
-        class="day-item"
-        :class="{ 'day-item--today': index === 0 }"
+        :class="[
+          'bg-white rounded-xl p-5 shadow-sm border transition-all duration-200 hover:shadow-md dark:bg-gray-700/50 dark:border-gray-600',
+          index === 0 ? 'border-primary-300 bg-primary-50/50 dark:border-primary-600 dark:bg-primary-900/20' : 'border-gray-200'
+        ]"
       >
-        <div class="day-header">
-          <div class="day-date">
-            <div class="day-name">{{ formatDayName(day.date, index) }}</div>
-            <div class="day-full-date">{{ formatFullDate(day.date) }}</div>
+        <!-- 日期和主要信息 -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex-1">
+            <div class="font-bold text-lg text-gray-800 dark:text-gray-100">{{ formatDayName(day.date, index) }}</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ formatFullDate(day.date) }}</div>
           </div>
-          
-          <div class="day-icon">
+
+          <div class="flex items-center gap-4">
             <WeatherIcon
               :weather-code="day.day.condition.code"
               :is-day="1"
               :description="day.day.condition.text"
               large
             />
-          </div>
-          
-          <div class="day-temps">
-            <div class="temp-high">{{ Math.round(day.day.maxtemp_c) }}°</div>
-            <div class="temp-low">{{ Math.round(day.day.mintemp_c) }}°</div>
+
+            <div class="text-right">
+              <div class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ Math.round(day.day.maxtemp_c) }}°</div>
+              <div class="text-lg text-gray-500 dark:text-gray-400">{{ Math.round(day.day.mintemp_c) }}°</div>
+            </div>
           </div>
         </div>
-        
-        <div class="day-condition">
+
+        <!-- 天气状况 -->
+        <div class="text-center text-gray-600 mb-4 font-medium dark:text-gray-300">
           {{ day.day.condition.text }}
         </div>
-        
-        <div class="day-details">
-          <div class="detail-row">
-            <div class="detail-item">
-              <span class="detail-icon">💧</span>
-              <span class="detail-label">降雨概率</span>
-              <span class="detail-value">{{ day.day.daily_chance_of_rain }}%</span>
+
+        <!-- 详细信息 -->
+        <div class="grid grid-cols-2 gap-3 mb-4 max-md:grid-cols-1">
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-600/30">
+            <div class="flex items-center gap-2">
+              <span>💧</span>
+              <span class="text-sm text-gray-600 dark:text-gray-300">降雨概率</span>
             </div>
-            
-            <div class="detail-item">
-              <span class="detail-icon">💨</span>
-              <span class="detail-label">最大风速</span>
-              <span class="detail-value">{{ Math.round(day.day.maxwind_kph) }} km/h</span>
-            </div>
+            <span class="font-semibold text-gray-800 dark:text-gray-100">{{ day.day.daily_chance_of_rain }}%</span>
           </div>
-          
-          <div class="detail-row">
-            <div class="detail-item">
-              <span class="detail-icon">💦</span>
-              <span class="detail-label">湿度</span>
-              <span class="detail-value">{{ day.day.avghumidity }}%</span>
+
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-600/30">
+            <div class="flex items-center gap-2">
+              <span>💨</span>
+              <span class="text-sm text-gray-600 dark:text-gray-300">最大风速</span>
             </div>
-            
-            <div class="detail-item">
-              <span class="detail-icon">☀️</span>
-              <span class="detail-label">紫外线</span>
-              <span class="detail-value">{{ day.day.uv }}</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-100">{{ Math.round(day.day.maxwind_kph) }} km/h</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-600/30">
+            <div class="flex items-center gap-2">
+              <span>💦</span>
+              <span class="text-sm text-gray-600 dark:text-gray-300">湿度</span>
             </div>
+            <span class="font-semibold text-gray-800 dark:text-gray-100">{{ day.day.avghumidity }}%</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-600/30">
+            <div class="flex items-center gap-2">
+              <span>☀️</span>
+              <span class="text-sm text-gray-600 dark:text-gray-300">紫外线</span>
+            </div>
+            <span class="font-semibold text-gray-800 dark:text-gray-100">{{ day.day.uv }}</span>
           </div>
         </div>
-        
-        <div class="day-astro">
-          <div class="astro-item">
-            <span class="astro-icon">🌅</span>
-            <span class="astro-label">日出</span>
-            <span class="astro-value">{{ day.astro.sunrise }}</span>
+
+        <!-- 日出日落 -->
+        <div class="flex justify-center gap-8 pt-3 border-t border-gray-200 dark:border-gray-600">
+          <div class="flex items-center gap-2 text-sm">
+            <span>🌅</span>
+            <span class="text-gray-600 dark:text-gray-300">日出</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-100">{{ day.astro.sunrise }}</span>
           </div>
-          
-          <div class="astro-item">
-            <span class="astro-icon">🌇</span>
-            <span class="astro-label">日落</span>
-            <span class="astro-value">{{ day.astro.sunset }}</span>
+
+          <div class="flex items-center gap-2 text-sm">
+            <span>🌇</span>
+            <span class="text-gray-600 dark:text-gray-300">日落</span>
+            <span class="font-semibold text-gray-800 dark:text-gray-100">{{ day.astro.sunset }}</span>
           </div>
         </div>
       </div>
     </div>
-    
-    <div v-else class="no-data">
+
+    <div v-else class="text-center p-8 text-gray-500 bg-gray-50 rounded-xl dark:bg-gray-700/30 dark:text-gray-400">
       暂无预报数据
     </div>
   </div>
@@ -188,287 +207,3 @@ watch(
   { immediate: true, deep: true }
 );
 </script>
-
-<style scoped>
-.daily-forecast {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin: 20px 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.forecast-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #2d3436;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 40px;
-  color: #636e72;
-}
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #e3e3e3;
-  border-top: 2px solid #74b9ff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.error {
-  text-align: center;
-  color: #e74c3c;
-  padding: 20px;
-  background: #ffe6e6;
-  border-radius: 8px;
-  margin: 10px 0;
-}
-
-.no-data {
-  text-align: center;
-  color: #636e72;
-  padding: 40px;
-  font-style: italic;
-}
-
-.daily-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.day-item {
-  padding: 16px;
-  border-radius: 12px;
-  background: #f8f9fa;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-}
-
-.day-item:hover {
-  background: linear-gradient(135deg, #e8f4fd, #d1ecf1);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(116, 185, 255, 0.2);
-  border-color: rgba(116, 185, 255, 0.4);
-}
-
-.day-item--today {
-  background: linear-gradient(135deg, #74b9ff, #0984e3);
-  color: white;
-  border-color: #0984e3;
-}
-
-.day-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.day-date {
-  flex: 1;
-}
-
-.day-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2d3436;
-  margin-bottom: 4px;
-}
-
-.day-item--today .day-name {
-  color: white;
-}
-
-.day-full-date {
-  font-size: 0.9rem;
-  color: #636e72;
-}
-
-.day-item--today .day-full-date {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.day-icon {
-  flex: 0 0 auto;
-  margin: 0 20px;
-}
-
-.day-temps {
-  flex: 0 0 auto;
-  text-align: right;
-}
-
-.temp-high {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #2d3436;
-  margin-bottom: 4px;
-}
-
-.day-item--today .temp-high {
-  color: white;
-}
-
-.temp-low {
-  font-size: 1rem;
-  color: #636e72;
-}
-
-.day-item--today .temp-low {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.day-condition {
-  text-align: center;
-  font-size: 0.95rem;
-  color: #636e72;
-  margin-bottom: 16px;
-  font-weight: 500;
-}
-
-.day-item--today .day-condition {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.day-details {
-  margin-bottom: 16px;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.detail-row:last-child {
-  margin-bottom: 0;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-}
-
-.detail-icon {
-  font-size: 0.9rem;
-}
-
-.detail-label {
-  font-size: 0.85rem;
-  color: #636e72;
-  min-width: 60px;
-}
-
-.day-item--today .detail-label {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.detail-value {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #2d3436;
-}
-
-.day-item--today .detail-value {
-  color: white;
-}
-
-.day-astro {
-  display: flex;
-  justify-content: space-around;
-  padding-top: 12px;
-  border-top: 1px solid #e9ecef;
-}
-
-.day-item--today .day-astro {
-  border-top-color: rgba(255, 255, 255, 0.3);
-}
-
-.astro-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.astro-icon {
-  font-size: 0.9rem;
-}
-
-.astro-label {
-  font-size: 0.8rem;
-  color: #636e72;
-}
-
-.day-item--today .astro-label {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.astro-value {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #2d3436;
-}
-
-.day-item--today .astro-value {
-  color: white;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .daily-forecast {
-    margin: 16px 0;
-    padding: 16px;
-  }
-  
-  .day-item {
-    padding: 16px;
-  }
-  
-  .day-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 12px;
-  }
-  
-  .day-icon {
-    margin: 0;
-  }
-  
-  .detail-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .detail-item {
-    justify-content: space-between;
-  }
-}
-
-/* 减少动画模式支持 */
-@media (prefers-reduced-motion: reduce) {
-  .day-item {
-    transition: none;
-  }
-  
-  .loading-spinner {
-    animation: none;
-  }
-}
-</style>

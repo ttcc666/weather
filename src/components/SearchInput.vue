@@ -1,53 +1,87 @@
 <template>
-  <div class="search-input">
-    <div class="search-container">
+  <div class="flex-1 relative group">
+    <div class="relative">
+      <!-- 搜索图标 -->
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors duration-300">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+
+      <!-- 输入框 -->
       <input
         ref="searchInputRef"
         v-model="searchQuery"
         type="text"
         placeholder="搜索城市或地区..."
-        class="search-field"
+        class="w-full pl-12 pr-16 py-4 border-2 border-gray-200/80 rounded-2xl font-medium outline-none transition-all duration-300 bg-white/95 backdrop-blur-sm shadow-input focus:border-primary-500 focus:shadow-input-focus focus:bg-white focus:-translate-y-0.5 placeholder:text-gray-400 placeholder:font-normal hover:border-gray-300 hover:shadow-md dark:bg-gray-800/95 dark:border-gray-600 dark:text-gray-100 dark:placeholder:text-gray-400"
         @input="handleInput"
         @focus="handleFocus"
         @blur="handleBlur"
         @keydown="handleKeydown"
       />
-      <div v-if="isLoading" class="search-loading">
+
+      <!-- 加载状态 -->
+      <div v-if="isLoading" class="absolute right-12 top-1/2 -translate-y-1/2 flex items-center justify-center">
         <div class="loading-spinner"></div>
       </div>
-      <button v-if="searchQuery" @click="clearSearch" class="clear-button">
-        ✕
+
+      <!-- 清除按钮 -->
+      <button
+        v-if="searchQuery"
+        @click="clearSearch"
+        class="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 active:scale-95 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
       </button>
     </div>
-    
-    <div v-if="showSuggestions && suggestions.length > 0" class="suggestions">
+
+    <!-- 建议下拉框 -->
+    <div v-if="showSuggestions && suggestions.length > 0" class="absolute top-full left-0 right-0 mt-3 bg-white/95 backdrop-blur-xl rounded-2xl shadow-floating border border-white/40 max-h-80 overflow-y-auto z-50 animate-slide-down dark:bg-gray-800/95 dark:border-gray-600/40">
       <div
         v-for="(suggestion, index) in suggestions"
         :key="suggestion.id"
-        :class="['suggestion-item', { 'suggestion-item--active': index === activeIndex }]"
+        :class="[
+          'flex items-center justify-between p-4 cursor-pointer transition-all duration-200 first:rounded-t-2xl last:rounded-b-2xl group',
+          index === activeIndex
+            ? 'bg-gradient-to-r from-primary-50 to-blue-50 text-primary-700 shadow-inner dark:from-primary-900/30 dark:to-blue-900/30 dark:text-primary-300'
+            : 'hover:bg-gray-50/80 dark:hover:bg-gray-700/50'
+        ]"
         @click="selectSuggestion(suggestion)"
         @mouseenter="activeIndex = index"
       >
-        <div class="suggestion-main">
-          <span class="suggestion-name">{{ suggestion.name }}</span>
-          <span class="suggestion-region">{{ suggestion.region }}</span>
+        <div class="flex items-center gap-3">
+          <div class="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 opacity-60 group-hover:opacity-100 transition-opacity"></div>
+          <div class="flex flex-col">
+            <span class="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{{ suggestion.name }}</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ suggestion.region }}</span>
+          </div>
         </div>
-        <div class="suggestion-country">{{ suggestion.country }}</div>
+        <div class="text-xs text-gray-400 dark:text-gray-500 font-medium px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg">{{ suggestion.country }}</div>
       </div>
     </div>
-    
-    <div v-if="showSuggestions && searchQuery && suggestions.length === 0 && !isLoading" class="no-results">
-      未找到匹配的地点
+
+    <!-- 无结果状态 -->
+    <div v-if="showSuggestions && searchQuery && suggestions.length === 0 && !isLoading" class="absolute top-full left-0 right-0 mt-3 p-6 text-center bg-white/95 backdrop-blur-xl rounded-2xl shadow-floating border border-white/40 animate-slide-down dark:bg-gray-800/95 dark:border-gray-600/40">
+      <div class="text-4xl mb-3 opacity-60">🔍</div>
+      <p class="text-gray-500 dark:text-gray-400 font-medium">未找到匹配的地点</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">请尝试其他关键词</p>
     </div>
-    
-    <div v-if="error" class="search-error">
-      {{ error }}
+
+    <!-- 错误状态 -->
+    <div v-if="error" class="mt-3 p-4 bg-gradient-to-r from-red-50 to-pink-50 text-red-600 border border-red-200 rounded-2xl text-sm shadow-md animate-shake dark:from-red-900/20 dark:to-pink-900/20 dark:border-red-800 dark:text-red-400">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">⚠️</span>
+        <span class="font-medium">{{ error }}</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, nextTick } from 'vue';
 import { weatherService } from '../services/weather';
 import type { SearchLocation } from '../types/weather';
 
@@ -180,226 +214,3 @@ defineExpose({
   clear: clearSearch
 });
 </script>
-
-<style scoped>
-.search-input {
-  position: relative;
-  width: 100%;
-}
-
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-field {
-  width: 100%;
-  padding: 12px 16px;
-  padding-right: 60px;
-  border: 2px solid rgba(226, 232, 240, 0.8);
-  border-radius: 16px;
-  font-size: 15px;
-  font-weight: 500;
-  outline: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  letter-spacing: -0.025em;
-}
-
-.search-field::placeholder {
-  color: #94a3b8;
-  font-weight: 400;
-}
-
-.search-field:focus {
-  border-color: #667eea;
-  box-shadow:
-    0 8px 24px rgba(102, 126, 234, 0.15),
-    0 4px 12px rgba(102, 126, 234, 0.1);
-  background: rgba(255, 255, 255, 0.95);
-  transform: translateY(-1px);
-}
-
-.search-loading {
-  position: absolute;
-  right: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.loading-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(102, 126, 234, 0.2);
-  border-top: 2px solid #667eea;
-  border-radius: 50%;
-  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  filter: drop-shadow(0 1px 2px rgba(102, 126, 234, 0.3));
-}
-
-.clear-button {
-  position: absolute;
-  right: 16px;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
-}
-
-.clear-button:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  transform: scale(1.1);
-  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
-}
-
-.suggestions {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.5);
-  border-radius: 16px;
-  max-height: 320px;
-  overflow-y: auto;
-  z-index: 1000;
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    0 8px 16px rgba(0, 0, 0, 0.06);
-  padding: 8px;
-}
-
-.suggestion-item {
-  padding: 12px 16px;
-  cursor: pointer;
-  border-radius: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2px;
-  position: relative;
-  overflow: hidden;
-}
-
-.suggestion-item:last-child {
-  margin-bottom: 0;
-}
-
-.suggestion-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(116, 70, 162, 0.03));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.suggestion-item:hover,
-.suggestion-item--active {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(116, 70, 162, 0.05));
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.1);
-}
-
-.suggestion-item:hover::before,
-.suggestion-item--active::before {
-  opacity: 1;
-}
-
-.suggestion-main {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.suggestion-name {
-  font-weight: 500;
-  color: #2d3436;
-  margin-bottom: 2px;
-}
-
-.suggestion-region {
-  font-size: 14px;
-  color: #636e72;
-}
-
-.suggestion-country {
-  font-size: 12px;
-  color: #b2bec3;
-  text-align: right;
-}
-
-.no-results {
-  padding: 16px;
-  text-align: center;
-  color: #636e72;
-  font-style: italic;
-  background: white;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-}
-
-.search-error {
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: #ffe6e6;
-  color: #e74c3c;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .search-field {
-    font-size: 16px; /* 防止iOS缩放 */
-  }
-  
-  .suggestions {
-    max-height: 200px;
-  }
-  
-  .suggestion-item {
-    padding: 10px 12px;
-  }
-}
-
-/* 减少动画模式支持 */
-@media (prefers-reduced-motion: reduce) {
-  .search-field {
-    transition: none;
-  }
-  
-  .loading-spinner {
-    animation: none;
-  }
-  
-  .suggestion-item {
-    transition: none;
-  }
-}
-</style>
